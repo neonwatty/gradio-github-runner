@@ -188,33 +188,50 @@ def build_and_push_image(repo_url, github_token, image_name, username=None):
 def _format_log(status_messages):
     return f'<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;">{"".join(status_messages)}</div>'
 
-with gr.Blocks() as demo:
-    gr.Markdown("# Docker Builder MCP Server")
-    with gr.Column():
-        repo_url = gr.Textbox(
-            label="GitHub Repository URL",
-            value="https://github.com/neonwatty/gradio-mcp-test-build-repo"
-        )
-        github_token = gr.Textbox(
-            label="GitHub Token", 
-            type="password",
-            value=""
-        )
-        image_name = gr.Textbox(
-            label="Image Name",
-            value="gradio-mcp-test-build-repo"
-        )
-        username = gr.Textbox(label="GitHub Username (optional)")
-        build_button = gr.Button("Build and Push Image")
-        output = gr.HTML(
-            label="Build Progress",
-            value='<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;"></div>'
-        )
+about_md = """
+### About
 
-    build_button.click(
-        fn=build_and_push_image,
-        inputs=[repo_url, github_token, image_name, username],
-        outputs=output
-    )
+Building Docker images for GitHub projects can be unreliable with the small default GitHub Actions runners, especially for moderately complex images.  Currently, upgrading to larger runners is only available for enterprise accounts.
+
+This MCP powered Gradio server aims to fill this gap.  
+
+Clone and host it on any sized machine — big or small — and never get stuck building and deploying your Image to Github Container Registry.
+
+Thanks to the Spaces ecosystem - the server always scales to zero when not in use.  
+
+This gives you a convenient, reliable, and cost-effective way to build and push Docker images for your GitHub repositories.
+"""
+
+with gr.Blocks() as demo:
+    with gr.Tab("Builder"):
+        gr.Markdown("# GitHub Container Registry → MCP Remote Builder")
+        with gr.Column():
+            repo_url = gr.Textbox(
+                label="GitHub Repository URL",
+                value="https://github.com/neonwatty/gradio-mcp-test-build-repo"
+            )
+            github_token = gr.Textbox(
+                label="GitHub Token", 
+                type="password",
+                value=""
+            )
+            image_name = gr.Textbox(
+                label="Image Name",
+                value="gradio-mcp-test-build-repo"
+            )
+            username = gr.Textbox(label="GitHub Username (optional)")
+            build_button = gr.Button("Build and Push Image")
+            output = gr.HTML(
+                label="Build Progress",
+                value='<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;"></div>'
+            )
+
+        build_button.click(
+            fn=build_and_push_image,
+            inputs=[repo_url, github_token, image_name, username],
+            outputs=output
+        )
+    with gr.Tab("About"):
+        gr.Markdown(about_md)
 
 demo.launch(mcp_server=True)

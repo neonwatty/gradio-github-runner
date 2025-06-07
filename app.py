@@ -74,7 +74,7 @@ def validate_image_name(image_name):
     
     return True, ""
 
-def build_and_push_image(repo_url, github_token, image_name, username=None):
+def build_and_push_image(repo_url, registry_token, image_name, username=None, registry="GitHub Container Registry (GHCR)"):
     temp_dir = None
     status_messages = []
     original_cwd = os.getcwd()  # Save the original working directory
@@ -86,26 +86,31 @@ def build_and_push_image(repo_url, github_token, image_name, username=None):
             return
 
         gh_username = username if username else extract_github_username(repo_url)
-        full_image_name = f"ghcr.io/{gh_username}/{image_name}"
+        if registry == "Docker Hub":
+            registry_url = "docker.io"
+            full_image_name = f"{gh_username}/{image_name}"
+        else:
+            registry_url = "ghcr.io"
+            full_image_name = f"ghcr.io/{gh_username}/{image_name}"
 
         steps = [
             (f"Starting build process for {full_image_name}...", "info"),
-            ("Authenticating with GitHub Container Registry...", "info")
+            (f"Authenticating with {registry_url}...", "info")
         ]
         for msg, st in steps:
             status_messages.append(format_status_message(msg, st))
             logger.info(f"→ {msg}")
             yield _format_log(status_messages)
 
-        login_cmd = ["docker", "login", "ghcr.io", "-u", gh_username, "--password-stdin"]
-        result = subprocess.run(login_cmd, input=github_token, capture_output=True, text=True)
+        login_cmd = ["docker", "login", registry_url, "-u", gh_username, "--password-stdin"]
+        result = subprocess.run(login_cmd, input=registry_token, capture_output=True, text=True)
         if result.returncode != 0:
-            status_messages.append(format_status_message(f"Failed to authenticate with GHCR: {result.stderr}", "error"))
-            logger.error(f"Failed to authenticate with GHCR: {result.stderr}")
+            status_messages.append(format_status_message(f"Failed to authenticate with {registry_url}: {result.stderr}", "error"))
+            logger.error(f"Failed to authenticate with {registry_url}: {result.stderr}")
             yield _format_log(status_messages)
             return
-        status_messages.append(format_status_message("Successfully authenticated with GHCR", "success"))
-        logger.info("✓ Successfully authenticated with GHCR")
+        status_messages.append(format_status_message(f"Successfully authenticated with {registry_url}", "success"))
+        logger.info(f"✓ Successfully authenticated with {registry_url}")
         yield _format_log(status_messages)
 
         temp_dir = tempfile.mkdtemp()
@@ -155,8 +160,8 @@ def build_and_push_image(repo_url, github_token, image_name, username=None):
         logger.info("✓ Docker image built successfully")
         yield _format_log(status_messages)
 
-        status_messages.append(format_status_message(f"Pushing Docker image to GHCR...", "info"))
-        logger.info(f"→ Pushing Docker image to GHCR...")
+        status_messages.append(format_status_message(f"Pushing Docker image to {registry_url}...", "info"))
+        logger.info(f"→ Pushing Docker image to {registry_url}...")
         yield _format_log(status_messages)
         push_cmd = ["docker", "push", full_image_name]
         result = subprocess.run(push_cmd, capture_output=True, text=True)
@@ -191,27 +196,24 @@ def _format_log(status_messages):
 about_md = """
 ### About
 
-Building Docker images for GitHub projects can be unreliable with the small default GitHub Actions runners, especially for moderately complex images.  Currently, upgrading to larger runners is only available for enterprise accounts.
+GitHub Actions runners can be a terrible place to build and deploy Docker images for your projects: Github's default runners are often too small for even for moderately complex image builds.  Presently, upgrading to larger runners is only available for enterprise customers.
 
-This MCP powered Gradio server aims to fill this gap.  
+This MCP powered Gradio server aims to fill the gap.  Clone it and create your own personal builder, on any sized / flavor of machine you like, effortlessly building and deploying your repo Images.  And thanks to the Spaces ecosystem - your personal runner always scales to zero when not in use.  
+ 
+With MCP integration, you never need to leave your IDE to trigger repo builds. 
 
-Clone and host it on any sized machine — big or small — and never get stuck building and deploying your Image to Github Container Registry.
-
-Thanks to the Spaces ecosystem - the server always scales to zero when not in use.  
-
-This gives you a convenient, reliable, and cost-effective way to build and push Docker images for your GitHub repositories.
 """
 
 with gr.Blocks() as demo:
     with gr.Tab("Builder"):
-        gr.Markdown("# GitHub Container Registry → MCP Remote Builder")
+        gr.Markdown("# Your Personal MCP Remote Builder for Github and Docker Registries")
         with gr.Column():
             repo_url = gr.Textbox(
                 label="GitHub Repository URL",
                 value="https://github.com/neonwatty/gradio-mcp-test-build-repo"
             )
-            github_token = gr.Textbox(
-                label="GitHub Token", 
+            registry_token = gr.Textbox(
+                label="Registry Token", 
                 type="password",
                 value=""
             )
@@ -220,6 +222,11 @@ with gr.Blocks() as demo:
                 value="gradio-mcp-test-build-repo"
             )
             username = gr.Textbox(label="GitHub Username (optional)")
+            registry = gr.Dropdown(
+                label="Registry",
+                choices=["GitHub Container Registry (GHCR)", "Docker Hub"],
+                value="GitHub Container Registry (GHCR)"
+            )
             build_button = gr.Button("Build and Push Image")
             output = gr.HTML(
                 label="Build Progress",
@@ -228,7 +235,7 @@ with gr.Blocks() as demo:
 
         build_button.click(
             fn=build_and_push_image,
-            inputs=[repo_url, github_token, image_name, username],
+            inputs=[repo_url, registry_token, image_name, username, registry],
             outputs=output
         )
     with gr.Tab("About"):

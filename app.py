@@ -190,28 +190,26 @@ def _format_log(status_messages):
 
 with gr.Blocks() as demo:
     gr.Markdown("# Docker Builder MCP Server")
-    with gr.Row():
-        with gr.Column(scale=1):
-            repo_url = gr.Textbox(
-                label="GitHub Repository URL",
-                value="https://github.com/neonwatty/gradio-mcp-test-build-repo"
-            )
-            github_token = gr.Textbox(
-                label="GitHub Token", 
-                type="password",
-                value=""
-            )
-            image_name = gr.Textbox(
-                label="Image Name",
-                value="gradio-mcp-test-build-repo"
-            )
-            username = gr.Textbox(label="GitHub Username (optional)")
-            build_button = gr.Button("Build and Push Image")
-        with gr.Column(scale=2):
-            output = gr.HTML(
-                label="Build Progress",
-                value='<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;"></div>'
-            )
+    with gr.Column():
+        repo_url = gr.Textbox(
+            label="GitHub Repository URL",
+            value="https://github.com/neonwatty/gradio-mcp-test-build-repo"
+        )
+        github_token = gr.Textbox(
+            label="GitHub Token", 
+            type="password",
+            value=""
+        )
+        image_name = gr.Textbox(
+            label="Image Name",
+            value="gradio-mcp-test-build-repo"
+        )
+        username = gr.Textbox(label="GitHub Username (optional)")
+        build_button = gr.Button("Build and Push Image")
+        output = gr.HTML(
+            label="Build Progress",
+            value='<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;"></div>'
+        )
 
     build_button.click(
         fn=build_and_push_image,

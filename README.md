@@ -94,7 +94,7 @@ build_and_push_image(
 
 Or, in natural language:
 
-> Build and push my repo as a Docker image to Docker Hub. Use this token: `YOUR_DOCKERHUB_TOKEN`.
+> Build the Dockerfile in `https://github.com/youruser/yourrepo` and push the image to Docker Hub. Use this token: `YOUR_DOCKERHUB_TOKEN`.
 
 ---
 

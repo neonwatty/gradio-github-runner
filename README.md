@@ -76,6 +76,9 @@ HuggingFace Spaces is perfect for this use case – clone the app there and you 
 - Open the app in your browser (locally or on Spaces).
 - Fill in the GitHub repo URL, registry token, image name, username, and select the registry.
 - Click "Build and Push Image" to start the process and view the logs in real time.
+- Create your registry token
+  - for GHCR, go to https://github.com/settings/tokens
+  - for Docker Hub, go to https://hub.docker.com/settings/security
 
 ### MCP Client (e.g., Cursor IDE, Claude Desktop)
 
@@ -94,7 +97,7 @@ build_and_push_image(
 
 Or, in natural language:
 
-> Build the Dockerfile in `https://github.com/youruser/yourrepo` and push the image to Docker Hub. Use this token: `YOUR_DOCKERHUB_TOKEN`.
+> Build the Dockerfile in `https://github.com/youruser/yourrepo` and push the image to Docker Hub. Use this token: `YOUR_REGISTRY_TOKEN`.
 
 ---
 

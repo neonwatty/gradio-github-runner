@@ -196,7 +196,7 @@ def _format_log(status_messages):
 about_md = """
 ### About
 
-GitHub Actions runners can be a terrible place to build and deploy Docker images for your projects: Github's default runners are often too small for even for moderately complex image builds.  Presently, upgrading to larger runners is only available for enterprise customers.
+GitHub Actions runners can be a terrible place to build and deploy Docker images for your projects: Github's default runners are often too small for even moderately complex image builds.  And at present larger runners are only available for enterprise customers.
 
 This MCP powered Gradio server aims to fill the gap.  Clone it and create your own personal builder, on any sized / flavor of machine you like, effortlessly building and deploying your repo Images.  And thanks to the Spaces ecosystem - your personal runner always scales to zero when not in use.  
  

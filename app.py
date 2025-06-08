@@ -74,7 +74,7 @@ def validate_image_name(image_name):
     
     return True, ""
 
-def build_and_push_image(repo_url, registry_token, image_name, username=None, registry="GitHub Container Registry (GHCR)"):
+def build_and_push_image(repo_url, registry_token, image_name, username=None, registry="GitHub Container Registry (GHCR)", dockerfile_subdir="."):
     temp_dir = None
     status_messages = []
     original_cwd = os.getcwd()  # Save the original working directory
@@ -137,19 +137,24 @@ def build_and_push_image(repo_url, registry_token, image_name, username=None, re
         os.chdir(temp_dir)
         yield _format_log(status_messages)
 
-        if not os.path.exists("Dockerfile"):
-            status_messages.append(format_status_message("No Dockerfile found in the repository", "error"))
-            logger.error("No Dockerfile found in the repository")
+        # Check for Dockerfile in the specified subdirectory
+        dockerfile_path = os.path.join(temp_dir, dockerfile_subdir, "Dockerfile")
+        if not os.path.exists(dockerfile_path):
+            status_messages.append(format_status_message(f"No Dockerfile found in the specified subdirectory: {dockerfile_subdir}", "error"))
+            logger.error(f"No Dockerfile found in the specified subdirectory: {dockerfile_subdir}")
             yield _format_log(status_messages)
             return
-        status_messages.append(format_status_message("Dockerfile found", "success"))
-        logger.info("✓ Dockerfile found")
+        status_messages.append(format_status_message(f"Dockerfile found in {dockerfile_subdir}", "success"))
+        logger.info(f"✓ Dockerfile found in {dockerfile_subdir}")
         yield _format_log(status_messages)
 
+        # Build the Docker image using the specified subdirectory as context
         status_messages.append(format_status_message(f"Building Docker image: {full_image_name}", "info"))
         logger.info(f"→ Building Docker image: {full_image_name}")
         yield _format_log(status_messages)
-        build_cmd = ["docker", "build", "-t", full_image_name, "."]
+        build_cmd = [
+            "docker", "build", "-t", full_image_name, "-f", dockerfile_path, os.path.join(temp_dir, dockerfile_subdir)
+        ]
         result = subprocess.run(build_cmd, capture_output=True, text=True)
         if result.returncode != 0:
             status_messages.append(format_status_message(f"Failed to build Docker image: {result.stderr}", "error"))
@@ -194,14 +199,19 @@ def _format_log(status_messages):
     return f'<div style="background-color: #1E1E1E; padding: 15px; border-radius: 5px; border: 1px solid #333; font-family: monospace;">{"".join(status_messages)}</div>'
 
 about_md = """
-### About
+# Your Personal MCP Remote Builder for GitHub and Docker Registries
 
-GitHub Actions runners can be a terrible place to build and deploy Docker images for your projects: Github's default runners are often too small for even moderately complex image builds.  And at present larger runners are only available for enterprise customers.
+This project is a Gradio-based web and MCP server that automates building Docker images from remote GitHub repositories and publishes them to either the GitHub Container Registry (GHCR) or Docker Hub.
 
-This MCP powered Gradio server aims to fill the gap.  Clone it and create your own personal builder, on any sized / flavor of machine you like, effortlessly building and deploying your repo Images.  And thanks to the Spaces ecosystem - your personal runner always scales to zero when not in use.  
- 
-With MCP integration, you never need to leave your IDE to trigger repo builds. 
+## The Problem
 
+Using GitHub for CI/CD for personal projects can be frustrating, as Github's default runners are often too small and fail at even moderately complex Docker image builds due to memory constraints. And at present larger runners are only available for enterprise customers.
+
+## Why Gradio + HuggingFace Spaces
+
+Gradio gives your MCP setup even more freedom — you can kick off builds from anywhere: straight from your IDE or a local LLM using the MCP protocol, programmatically via your codebase or GitHub workflow, or by using the Gradio web UI.
+
+HuggingFace Spaces is perfect for this use case – clone the app there and you can easily pick whatever size or type of machine you want to run it on, and when you’re not using it, it automatically scales right down to zero.
 """
 
 with gr.Blocks() as demo:
@@ -227,6 +237,11 @@ with gr.Blocks() as demo:
                 choices=["GitHub Container Registry (GHCR)", "Docker Hub"],
                 value="GitHub Container Registry (GHCR)"
             )
+            dockerfile_subdir = gr.Textbox(
+                label="Dockerfile Subdirectory (relative to repo root)",
+                value=".",
+                info="Path to the subdirectory containing the Dockerfile. Use '.' for the root."
+            )
             build_button = gr.Button("Build and Push Image")
             output = gr.HTML(
                 label="Build Progress",
@@ -235,7 +250,7 @@ with gr.Blocks() as demo:
 
         build_button.click(
             fn=build_and_push_image,
-            inputs=[repo_url, registry_token, image_name, username, registry],
+            inputs=[repo_url, registry_token, image_name, username, registry, dockerfile_subdir],
             outputs=output
         )
     with gr.Tab("About"):

@@ -2,13 +2,15 @@
 
 This project is a Gradio-based web and MCP server that automates building Docker images from remote GitHub repositories and publishes them to either the GitHub Container Registry (GHCR) or Docker Hub.
 
-Gradio MCP lets you trigger your builds from anywhere - right from your IDE or local LLM using the MCP protocol, programmatically from your codebase or Github workflow, or via the Gradio web UI.
-
 ## The Problem
 
 Using GitHub for CI/CD for personal projects can be frustrating, as Github's default runners are often too small and fail at even moderately complex Docker image builds due to memory constraints. And at present larger runners are only available for enterprise customers.
 
-The HuggingFace Spaces ecosystem is ideal for this use case; you can easily choose a machine of any size and flavor you want, and it always scales to zero when not in use.
+## Why Gradio + HuggingFace Spaces
+
+Gradio gives your MCP setup even more freedom — you can kick off builds from anywhere: straight from your IDE or a local LLM using the MCP protocol, programmatically via your codebase or GitHub workflow, or by using the Gradio web UI.
+
+HuggingFace Spaces is perfect for this use case – clone the app there and you can easily pick whatever size or type of machine you want to run it on, and when you’re not using it, it automatically scales right down to zero.
 
 ## Features
 

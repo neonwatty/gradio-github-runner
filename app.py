@@ -251,9 +251,10 @@ with gr.Blocks() as demo:
         build_button.click(
             fn=build_and_push_image,
             inputs=[repo_url, registry_token, image_name, username, registry, dockerfile_subdir],
-            outputs=output
+            outputs=output,
+            concurrency_limit=1
         )
     with gr.Tab("About"):
         gr.Markdown(about_md)
 
-demo.launch(mcp_server=True)
+demo.queue().launch(mcp_server=True)
